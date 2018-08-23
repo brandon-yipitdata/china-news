@@ -70,3 +70,12 @@ def get_reuters_china():
     df = pd.DataFrame(empty_list)
     df = df[['hed','url']].head()
     return df
+
+def get_caixin():
+    """Get five most recent business and tech stories from Caixin Global"""
+    url = 'https://gateway.caixin.com/api/data/getNewsListByPids?page=1&size=5&pids=101267062'
+    res = requests.get(url)
+    df = pd.DataFrame(res.json()['data']['list'])
+    df = df[['desc','url']]
+
+    return df
