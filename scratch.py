@@ -3,16 +3,16 @@ import pandas as pd
 import send_me_email
 import web
 
-ft = web.get_ft_stories().head().to_html(index = False)
-xinhua = web.get_xinhua_news().to_html(index = False)
-yicai = web.get_yicai().to_html(index = False)
-reuters = web.get_reuters_china().to_html(index = False)
 
-subject = "China Hourly Roundup"
-message = u'FT:\n{}\n\nReuters:\n{}\n\nXinhua:\n{}\n\nYicai:\n{}'.format(ft,reuters,xinhua,yicai)
-recipients = ['bemmerich@Yipitdata.com','emailbot4data@gmail.com']
+def get_caixin():
+    """Get five most recent business and tech stories from Caixin Global"""
+    url = 'https://gateway.caixin.com/api/data/getNewsListByPids?page=1&size=5&pids=101267062'
+    res = requests.get(url)
+    df = pd.DataFrame(res.json()['data']['list'])
+    df = df[['desc','url']]
 
+    return df
 
-for recipient in recipients:
-    print recipient
-    send_me_email.send_html_email_3(message, recipient, subject)
+test = get_caixin()
+
+import ipdb; ipdb.set_trace()

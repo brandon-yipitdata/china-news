@@ -15,7 +15,7 @@ def send_html_email(html, recipient, subject):
 
 	server = smtplib.SMTP('smtp.gmail.com', 587)
 	server.starttls()
-	server.login(fromaddress, 'iloveemailbot')
+	server.login(fromaddress, 'phmtwvkyhbptfejf')
 	text = message.as_string()
 	server.sendmail(fromaddress, recipient, text)
 	server.quit()

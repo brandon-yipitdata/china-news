@@ -12,7 +12,7 @@ caixin = web.get_caixin().to_html(index = False)
 
 subject = "China Hourly Roundup"
 message = u'FT:\n{}\n\nReuters:\n{}\n\nCaixin Business & Tech:\n{}\n\nXinhua:\n{}\n\nYicai:\n{}'.format(ft,reuters,caixin,xinhua,yicai)
-recipients = ['bemmerich@Yipitdata.com','jyoo@yipitdata.com']
+recipients = ['bemmerich@Yipitdata.com','jyoo@yipitdata.com', 'ngup@yipitdata.com']
 
 
 for recipient in recipients:
