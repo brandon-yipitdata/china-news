@@ -1,20 +1,25 @@
-#! /anaconda2/bin/python
 # -*- coding: utf-8 -*-
-
-import send_me_email
+import private
+import psycopg2
+import time
 import web
 
-ft = web.get_ft_stories().head().to_html(index = False)
-xinhua = web.get_xinhua_news().to_html(index = False)
-yicai = web.get_yicai().to_html(index = False)
-reuters = web.get_reuters_china().to_html(index = False)
-caixin = web.get_caixin().to_html(index = False)
+conn = psycopg2.connect(private.DB_CONNECTION_STRING)
+run_id = int(time.time())
 
-subject = "China Hourly Roundup"
-message = u'FT:\n{}\n\nReuters:\n{}\n\nCaixin Business & Tech:\n{}\n\nXinhua:\n{}\n\nYicai:\n{}'.format(ft,reuters,caixin,xinhua,yicai)
-recipients = ['bemmerich@Yipitdata.com','jyoo@yipitdata.com', 'ngup@yipitdata.com']
+list_of_urls = web.get_urls(conn)
 
+web.get_yicai(conn, run_id, list_of_urls)
+web.get_xinhua(conn, run_id, list_of_urls)
+web.get_reuters_china(conn, run_id, list_of_urls)
+web.get_caixin(conn,run_id,list_of_urls)
+
+the_news = web.get_the_news(conn)
+
+subject = "China News Roundup"
+recipients = private.EMAIL_RECIPIENTS
+email_body = u'The News:\n\n\n{}\n\n\nLove,\nYour China Email Bot'.format(the_news.to_html())
 
 for recipient in recipients:
     print recipient
-    send_me_email.send_html_email(message, recipient, subject)
+    web.send_html_email(email_body, recipient, subject)
