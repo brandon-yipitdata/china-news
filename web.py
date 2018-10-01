@@ -5,6 +5,7 @@ from email.MIMEMultipart import MIMEMultipart
 from email.MIMEText import MIMEText
 import pandas as pd
 import private
+import settings
 import smtplib
 import psycopg2
 import requests
@@ -13,10 +14,10 @@ import uuid
 
 pd.set_option('max_colwidth', 160)
 
-def get_urls(conn):
+def get_urls(conn, GET_URLS_QUERY):
     '''Query news database to find existing news urls'''
     cur = conn.cursor()
-    cur.execute(private.GET_URLS_QUERY)
+    cur.execute(GET_URLS_QUERY)
     list_of_urls = [tuple_[0] for tuple_ in cur.fetchall()]
 
     return list_of_urls
@@ -39,7 +40,7 @@ def get_yicai(conn, run_id, list_of_urls):
         }
 
         if row['url'] not in list_of_urls:
-            cur.execute(private.INSERT_QUERY, row)
+            cur.execute(settings.QUERY_INSERT, row)
             conn.commit()
         else:
             print 'We good on this: ' + row['url']
@@ -65,7 +66,7 @@ def get_xinhua(conn, run_id, list_of_urls):
 
         if row['url'] not in list_of_urls:
             print 'We need this: ' + row['url']
-            cur.execute(private.INSERT_QUERY, row)
+            cur.execute(settings.QUERY_INSERT, row)
             conn.commit()
         else:
             print 'We good on this: ' + row['url']
@@ -91,7 +92,7 @@ def get_reuters_china(conn, run_id, list_of_urls):
 
             if row['url'] not in list_of_urls:
                 print 'We need this: ' + row['url']
-                cur.execute(private.INSERT_QUERY, row)
+                cur.execute(settings.QUERY_INSERT, row)
                 conn.commit()
             else:
                 print 'We good on this: ' + row['url']
@@ -119,7 +120,7 @@ def get_caixin(conn, run_id, list_of_urls):
 
         if row['url'] not in list_of_urls:
             print 'We need this: ' + row['url']
-            cur.execute(private.INSERT_QUERY, row)
+            cur.execute(settings.QUERY_INSERT, row)
             conn.commit()
         else:
             print 'We good on this: ' + row['url']
@@ -145,7 +146,127 @@ def get_the_news(conn):
     pd.set_option('max_colwidth', 160)
 
     cur = conn.cursor()
-    cur.execute(private.GET_NEWS_QUERY)
+    cur.execute(settings.QUERY_GET_THE_NEWS)
     df = pd.DataFrame(cur.fetchall(), columns=['Source', 'Story', 'Url'])
 
     return df
+
+
+def get_tonghuashun(ticker, conn, run_id, list_of_urls):
+    '''Write new ticker-based stories from Tonghuashun to the database'''
+    url = 'https://mnews.hexin.cn/listv2/us/{}_1.json'.format(ticker)
+    print url
+
+    headers = {
+        'Connection': 'keep-alive',
+        'User-Agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_13_6) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/69.0.3497.100 Safari/537.36',
+        'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,image/apng,*/*;q=0.8',
+        'Accept-Encoding': 'gzip, deflate, br',
+        'Accept-Language': 'en-US,en;q=0.9,zh-CN;q=0.8,zh;q=0.7',
+        'If-None-Match': 'W/"5baf85b7-11cd"',
+    }
+
+    res = requests.get(url, headers=headers)
+    data = res.json()['pageItems']
+    cur = conn.cursor()
+
+    for d in data:
+        try:
+            row = {
+                'run_id' : run_id,
+                'uuid': str(uuid.uuid4()),
+                'ticker' : ticker,
+                'date_story' : int(d['ctime']),
+                'source' : d['source'],
+                'title' : d['title'],
+                'url' : d['url']
+            }
+
+            if row['url'] not in list_of_urls:
+                print 'We need this: ' + row['url']
+                cur.execute(settings.QUERY_TONGHUASHUN_INSERT,row)
+                conn.commit()
+            else:
+                print 'We already have this: ' + row['url']
+
+        except Exception as e:
+            print e
+
+
+
+def get_newsapi(ticker, conn, run_id, newsapi, list_of_urls):
+    '''Get China business news and write to DB'''
+    cur = conn.cursor()
+    headlines = newsapi.get_top_headlines(q='{}'.format(ticker), category='business',language='en', country = 'us')
+    data = headlines['articles']
+    print ticker
+
+    for d in data:
+
+        row = {
+                'run_id': run_id,
+                'uuid' : str(uuid.uuid4()),
+                'ticker': ticker,
+                'date_story' : datetime.datetime.strptime(d['publishedAt'], '%Y-%m-%dT%H:%M:%SZ'),
+                'source': d['source']['name'],
+                'url' : d['url'],
+                'title' : d['title'][:250],
+                'description' : d['description'][:250],
+            }
+
+        if row['url'] not in list_of_urls:
+            try:
+                cur.execute(settings.QUERY_NEWSAPI_INSERT, row)
+                conn.commit()
+            except Exception as e:
+                print row['url']
+                print e
+                conn.rollback()
+        else:
+            print 'We good on this: ' + row['url']
+
+
+def get_webhose(conn, run_id, webhoseio, list_of_urls, org, ticker):
+    '''Get webhose news data and write to DB'''
+    cur = conn.cursor()
+    query_params = {
+        "q": "language:english organization:{} site_type:news".format(org),
+        "sort": "crawled"
+    }
+
+    output = webhoseio.query("filterWebContent", query_params)
+    data = output['posts']
+
+    for d in data:
+
+        row = {
+                'run_id': run_id,
+                'uuid' : str(uuid.uuid4()),
+                'ticker' : ticker,
+                'date_story' : datetime.datetime.strptime(d['published'][0:19], '%Y-%m-%dT%H:%M:%S'),
+                'source': d['thread']['site'][:490],
+                'url' : d['url'][:490],
+                'title' : d['title'][:490],
+                'description' : d['text'][:490],
+            }
+
+        if row['url'] not in list_of_urls:
+            try:
+                cur.execute(settings.QUERY_WEBHOSE_INSERT, row)
+                conn.commit()
+            except Exception as e:
+                print row['url']
+                print e
+                conn.rollback()
+        else:
+            print "We already have this: " + row['url']
+
+def get_API_results(conn):
+    '''Get only the most recent set of news stories'''
+    pd.set_option('max_colwidth', 160)
+
+    cur = conn.cursor()
+    cur.execute(settings.QUERY_SUMMARIZE_API_RESULTS)
+    df = pd.DataFrame(cur.fetchall(), columns=['API Service', 'Story Count'])
+
+    return df.to_html()
