@@ -36,12 +36,16 @@ list_of_organizations_chinese = [tuple_[0] for tuple_ in list_tuples_org_and_tic
 # Send Report ------------------------------------------------------------------
 
 the_news = web.get_the_news(conn)
-conn.close()
-
 subject = "China News Roundup"
 recipients = private.EMAIL_RECIPIENTS
-email_body = u'The News:\n\n\n{}\n\n\nLove,\nYour China Email Bot'.format(the_news.to_html())
+
+if run_id == web.get_max_run_id(conn):
+    email_body = u'The News:\n\n\n{}\n\n\nLove,\nYour China Email Bot'.format(the_news.to_html())
+else:
+    email_body = u'No new news this run. See you next time!\nLove,\nYour China Email Bot'
 
 for recipient in recipients:
     print recipient
     web.send_html_email(email_body, recipient, subject)
+
+conn.close()
