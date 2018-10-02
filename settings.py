@@ -1,6 +1,7 @@
+## -*- coding: utf-8 -*-
 LIST_TICKERS = ['BABA', 'JD', 'PDD', 'YY', 'HUYA', 'MOMO', 'BILI', 'IQ', 'EDU','TAL','VIPS','ZTP','BSTI']
 LIST_ORGANIZATIONS = [('Alibaba', 'BABA'), ('JD', 'JD'),('Pinduoduo', 'PDD'),('YY', 'YY'),('HUYA','HUYA'),('MOMO', 'MOMO'), ('Bilibili', 'BILI'), ('iQiyi', 'IQ'), ('New Oriental', 'EDU'),('TAL EDUCATION','TAL'), ('VIP Shop', 'VIPS'), ('ZTO Express', 'ZTO'),('Best Inc', 'BSTI')]
-
+LIST_ORGANIZATIONS_CHINESE = [('阿里巴巴', 'BABA'), ('京东', 'JD'),('拼多多', 'PDD'),('YY', 'YY'),('虎牙','HUYA'),('陌陌', 'MOMO'), ('哔哩哔哩', 'BILI'), ('爱奇艺', 'IQ'), ('新东方', 'EDU'),('好未来','TAL'), ('唯品会', 'VIPS'), ('中通快递', 'ZTO'),('百世集团', 'BSTI')]
 
 
 QUERY_INSERT = '''INSERT INTO sandbox.china_news (run_id, uuid, date_story, source, title, url) VALUES (%(run_id)s,%(uuid)s,%(date_story)s,%(source)s,%(title)s,%(url)s)'''

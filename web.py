@@ -270,3 +270,62 @@ def get_API_results(conn):
     df = pd.DataFrame(cur.fetchall(), columns=['API Service', 'Story Count'])
 
     return df.to_html()
+
+
+def get_wallstreet_cn(conn, run_id, list_of_urls, ticker):
+    '''Get Yicai stories and write to database'''
+    url = 'https://api-prod.wallstreetcn.com/apiv1/search/article?order_type=time&cursor=&limit=20&search_id=&query={}'.format(ticker)
+    res = requests.get(url)
+    data = res.json()['data']['items']
+    cur = conn.cursor()
+
+    for d in data:
+        row = {
+            'run_id' : run_id,
+            'uuid': str(uuid.uuid4()),
+            'date_story': datetime.datetime.fromtimestamp(int(d['display_time'])),
+            'source' : 'WallstreetCN',
+            'title' : d['title'],
+            'url' : d['uri'],
+        }
+
+        if row['url'] not in list_of_urls:
+            try:
+                cur.execute(settings.QUERY_INSERT, row)
+                conn.commit()
+            except Exception as e:
+                print e
+                print row['url']
+                conn.rollback()
+        else:
+            print 'We already have this: ' + row['url']
+
+
+
+def get_21jingji(conn, run_id, list_of_urls, ticker):
+    '''Get Yicai stories and write to database'''
+    url = 'http://www.21jingji.com/dynamic/content/search/index/{}/1'.format(ticker)
+    res = requests.get(url)
+    data = res.json()
+    cur = conn.cursor()
+
+    for d in data:
+        row = {
+            'run_id' : run_id,
+            'uuid': str(uuid.uuid4()),
+            'date_story': datetime.datetime.fromtimestamp(int(d['inputtime'])),
+            'source' : '21 Jingji',
+            'title' : d['title'],
+            'url' : d['url'],
+        }
+
+        if row['url'] not in list_of_urls:
+            try:
+                cur.execute(settings.QUERY_INSERT, row)
+                conn.commit()
+            except Exception as e:
+                print e
+                print row['url']
+                conn.rollback()
+        else:
+            print 'We already have this: ' + row['url']
