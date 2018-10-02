@@ -15,6 +15,7 @@ QUERY_GET_THE_NEWS = '''
     WHERE run_id IN (SELECT MAX(run_id) FROM sandbox.china_news)
     ORDER BY source, title
 '''
+QUERY_GET_MAX_RUN_ID = '''SELECT MAX(run_id) FROM sandbox.china_news'''
 
 
 QUERY_NEWSAPI_INSERT = '''INSERT INTO sandbox.china_news_newsapi (run_id, uuid, ticker, date_story, source, title, url, description) VALUES (%(run_id)s,%(uuid)s,%(ticker)s,%(date_story)s,%(source)s,%(title)s,%(url)s, %(description)s)'''

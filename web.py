@@ -330,3 +330,12 @@ def get_21jingji(conn, run_id, list_of_urls, ticker):
                 conn.rollback()
         else:
             print 'We already have this: ' + row['url']
+
+
+def get_max_run_id(conn):
+    '''Get the max run_id from the China news database'''
+    cur = conn.cursor()
+    cur.execute(settings.QUERY_GET_MAX_RUN_ID)
+    query_results = cur.fetchall()
+
+    return int(query_results[0][0])
