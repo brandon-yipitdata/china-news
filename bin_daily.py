@@ -47,7 +47,7 @@ for org, ticker in settings.LIST_ORGANIZATIONS:
 report = web.get_API_results(conn)
 
 subject = "API Results Email"
-recipient = private.EMAIL_ADMIN
+recipient = private.EMAIL_RECIPIENTS
 email_body = u'The Results:\n\n\n{}\n\n\nLove,\nYour China Email Bot'.format(report)
 
 web.send_html_email(email_body, recipient, subject)
