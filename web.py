@@ -8,6 +8,7 @@ import private
 import settings
 import smtplib
 import psycopg2
+import re
 import requests
 import time
 import uuid
@@ -285,7 +286,7 @@ def get_wallstreet_cn(conn, run_id, list_of_urls, ticker):
             'uuid': str(uuid.uuid4()),
             'date_story': datetime.datetime.fromtimestamp(int(d['display_time'])),
             'source' : 'WallstreetCN',
-            'title' : d['title'],
+            'title' : re.sub('<[^<]+?>', '', d['title']),
             'url' : d['uri'],
         }
 
@@ -315,7 +316,7 @@ def get_21jingji(conn, run_id, list_of_urls, ticker):
             'uuid': str(uuid.uuid4()),
             'date_story': datetime.datetime.fromtimestamp(int(d['inputtime'])),
             'source' : '21 Jingji',
-            'title' : d['title'],
+            'title' : re.sub('<[^<]+?>', '', d['title']),
             'url' : d['url'],
         }
 
